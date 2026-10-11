@@ -562,52 +562,486 @@ example (State : Type)
    exact hS ψ hCode
    exact hT ψ hCode
 
-example (State : Type) (ψ : State)
+ example (State : Type) (ψ : State)
     (S T : State → State)
     (h : S ψ = ψ ∧ T ψ = ψ) :
     S (T ψ) = ψ := by
     rw [h.2]
     exact h.1
 
-example (P Q : ℕ → Prop)
-    (hP : ∃ a : ℕ, P a)
-    (hQ : ∃ b : ℕ, Q b) :
-    ∃ a b : ℕ, Q b ∧ P a := by
-    obtain ⟨a, ha⟩ := hP
-    obtain ⟨ b, hb⟩ := hQ
-    use a
-    use b
+example (State : Type) (ψ : State)
+    (S T : State → State)
+    (h : S ψ = ψ ∧ T ψ = ψ) :
+    S (T (S ψ)) = ψ := by
+  rw [h.1]
+  rw [h.2]
+  exact h.1
 
-example (P : ℕ → Prop)
-    (h : ∃ a : ℕ, ∃ b : ℕ, P (a + b)) :
-    ∃ n : ℕ, P n := by
-  obtain ⟨a , ha ⟩ := h
-  obtain ⟨ b, hab⟩ := ha
-  let n := a+b
-  use n
+example (State : Type)
+    (InCode : State → Prop)
+    (S T : State → State)
+    (h : ∀ ψ : State, InCode ψ →
+      (S ψ = ψ ∧ T ψ = ψ)) :
+    ∀ ψ : State, InCode ψ → S (T ψ) = ψ := by
+  intro ψ
+  intro F
+  have hBoth := h ψ F
+  rw [hBoth.2]
+  rw [hBoth.1]
 
-example (P Q : ℕ → Prop)
-    (h : ∃ n : ℕ, P n)
-    (hRule : ∀ n : ℕ, P n → Q (n + 1)) :
-    ∃ m : ℕ, Q m := by
-  obtain ⟨ n, hn⟩ := h
-  let qn := hRule n hn
-  let m := n+1
-  use m
-
-example (P Q : ℕ → Prop)
-    (h : ∃ n : ℕ, P n)
-    (hRule : ∀ n : ℕ, P n → ∃ m : ℕ, Q m) :
-    ∃ m : ℕ, Q m := by
-  obtain ⟨ n, hn ⟩ := h
-  let hhn := hRule n hn
-  obtain ⟨ m, hhm⟩ := hhn
-  use m
+example (State : Type)
+    (InCode : State → Prop)
+    (E R S : State → State)
+    (hRecover : ∀ ψ : State, InCode ψ → R (E ψ) = ψ)
+    (hStable : ∀ ψ : State, InCode ψ → S ψ = ψ) :
+    ∀ ψ : State, InCode ψ → S (R (E ψ)) = ψ := by
+  intro ψ
+  intro F
+  have hB := hRecover ψ F
+  have hC := hStable ψ F
+  rw [hB]
+  exact hC
 
 example (State : Type) (ψ : State)
-    (R : State → State)
-    (h : ∃ E : State → State, R (E ψ) = ψ) :
-    ∃ φ : State, R φ = ψ := by
-  obtain ⟨ E, RE⟩ := h
-  let φ := E ψ
-  use φ
+    (E1 E2 R : State → State)
+    (h1 : R (E1 ψ) = ψ)
+    (h2 : R (E2 ψ) = ψ) :
+    ∀ φ : State,
+      (φ = E1 ψ ∨ φ = E2 ψ) → R φ = ψ := by
+  intro φ F
+  cases F with
+   | inl F1 =>
+   rw [F1]
+   exact h1
+   |  inr F2 =>
+    rw [F2]
+    exact h2
+
+example (State : Type)
+    (InCode : State → Prop)
+    (E1 E2 R : State → State)
+    (h1 : ∀ ψ : State, InCode ψ → R (E1 ψ) = ψ)
+    (h2 : ∀ ψ : State, InCode ψ → R (E2 ψ) = ψ) :
+    ∀ ψ φ : State, InCode ψ →
+      (φ = E1 ψ ∨ φ = E2 ψ) → R φ = ψ := by
+    intro ψ φ hCode hError
+    have blah := h1 ψ hCode
+    have blahblah := h2 ψ hCode
+    cases hError with
+     | inl F1 =>
+    rw [F1]
+    exact blah
+     | inr F2 =>
+     rw [F2]
+     exact blahblah
+
+
+  example (State : Type)
+    (InCode : State → Prop)
+    (E R S : State → State)
+    (hRecover : ∀ ψ : State, InCode ψ → R (E ψ) = ψ)
+    (hStable : ∀ ψ : State, InCode ψ → S ψ = ψ)
+    (ψ : State)
+    (hCode : InCode ψ) :
+    S (R (E ψ)) = ψ := by
+   rw [hRecover ψ hCode]
+   exact hStable ψ hCode
+
+   example (State : Type) (ψ φ : State)
+    (E1 E2 R S : State → State)
+    (h1 : R (E1 ψ) = ψ)
+    (h2 : R (E2 ψ) = ψ)
+    (hStable : S ψ = ψ)
+    (hError : φ = E1 ψ ∨ φ = E2 ψ) :
+    S (R φ) = ψ := by
+    cases hError with
+      | inl F1 =>
+      rw [F1]
+      rw [h1]
+      exact hStable
+      | inr F2 =>
+      rw [F2]
+      rw [h2]
+      exact hStable
+
+  example (State : Type) (ψ φ : State)
+    (E1 E2 R S : State → State)
+    (h1 : R (E1 ψ) = ψ)
+    (h2 : R (E2 ψ) = ψ)
+    (hStable : S ψ = ψ)
+    (hError : φ = E1 ψ ∨ φ = E2 ψ) :
+    S (R φ) = ψ := by
+     have hRecovered : R φ = ψ := by
+      cases hError with
+        | inl F1 =>
+          rw [F1]
+          exact h1
+        | inr F2 =>
+          rw [F2]
+          exact h2
+     rw [hRecovered]
+     exact hStable
+  example (State : Type)
+    (InCode : State → Prop)
+    (E S : State → State)
+    (hPreserve : ∀ ψ : State, InCode ψ → InCode (E ψ))
+    (hStable : ∀ ψ : State, InCode ψ → S ψ = ψ)
+    (ψ : State)
+    (hCode : InCode ψ) :
+    S (E ψ) = E ψ := by
+   have hNew : InCode (E ψ) := by
+     exact hPreserve ψ hCode
+   exact hStable (E ψ) hNew
+
+ example (State : Type)
+    (InCode : State → Prop)
+    (E : State → State)
+    (hPreserve : ∀ ψ : State, InCode ψ → InCode (E ψ))
+    (ψ : State)
+    (hCode : InCode ψ) :
+    InCode (E (E ψ)) := by
+    have hNew : InCode (E ψ) := by
+     exact hPreserve ψ hCode
+    exact hPreserve (E ψ) hNew
+
+example (State : Type)
+    (InCode : State → Prop)
+    (E F S : State → State)
+    (hE : ∀ ψ : State, InCode ψ → InCode (E ψ))
+    (hF : ∀ ψ : State, InCode ψ → InCode (F ψ))
+    (hS : ∀ ψ : State, InCode ψ → S ψ = ψ)
+    (ψ : State)
+    (hCode : InCode ψ) :
+    S (F (E ψ)) = F (E ψ) := by
+     have hEpsi : InCode (E ψ) := by
+      exact hE ψ hCode
+     have hEEpsi : InCode (F (E ψ)) := by
+      exact hF (E ψ) hEpsi
+     exact hS (F (E ψ)) hEEpsi
+
+example (State : Type)
+    (S E : State → State)
+    (ψ : State)
+    (hStable : S ψ = ψ)
+    (hComm : ∀ φ : State, S (E φ) = E (S φ)) :
+    S (E ψ) = E ψ := by
+    rw [hComm ψ]
+    rw [hStable]
+
+example (State : Type)
+    (S T E : State → State)
+    (ψ : State)
+    (hS : S ψ = ψ)
+    (hT : T ψ = ψ)
+    (hCommS : ∀ φ : State, S (E φ) = E (S φ))
+    (hCommT : ∀ φ : State, T (E φ) = E (T φ)) :
+    S (E ψ) = E ψ ∧ T (E ψ) = E ψ := by
+    constructor
+    rw [hCommS ψ]
+    rw [hS]
+    rw [hCommT ψ]
+    rw [hT]
+
+example (State : Type)
+    (S T E : State → State)
+    (hCommS : ∀ φ : State, S (E φ) = E (S φ))
+    (hCommT : ∀ φ : State, T (E φ) = E (T φ)) :
+    ∀ ψ : State,
+      (S ψ = ψ ∧ T ψ = ψ) →
+      (S (E ψ) = E ψ ∧ T (E ψ) = E ψ) := by
+    intro ψ L
+    constructor
+    rw [hCommS ψ]
+    rw [L.1]
+    rw [hCommT ψ]
+    rw [L.2]
+
+example (State Index : Type)
+    (S : Index → State → State)
+    (E : State → State)
+    (ψ : State)
+    (hCode : ∀ i : Index, S i ψ = ψ)
+    (hComm : ∀ (i : Index) (φ : State),
+      S i (E φ) = E (S i φ)) :
+    ∀ i : Index, S i (E ψ) = E ψ := by
+    intro i
+    rw [hComm i ψ]
+    rw [hCode]
+
+example (State Index : Type)
+    (S : Index → State → State)
+    (E : State → State)
+    (hComm : ∀ (i : Index) (φ : State),
+      S i (E φ) = E (S i φ)) :
+    ∀ ψ : State,
+      (∀ i : Index, S i ψ = ψ) →
+      (∀ i : Index, S i (E ψ) = E ψ) := by
+    intro ψ
+    intro assu
+    intro i
+    rw [hComm i ψ]
+    rw [assu]
+
+     def InStabilizerCode {State Index : Type}
+    (S : Index → State → State) (ψ : State) : Prop :=
+  ∀ i : Index, S i ψ = ψ
+
+example (State Index : Type)
+    (S : Index → State → State)
+    (E : State → State)
+    (hComm : ∀ (i : Index) (φ : State),
+      S i (E φ) = E (S i φ))
+    (ψ : State)
+    (hCode : InStabilizerCode S ψ) :
+    InStabilizerCode S (E ψ) := by
+    unfold InStabilizerCode at hCode ⊢
+    intro i
+    rw [hComm i ψ]
+    rw [hCode i]
+
+
+example (State : Type)
+    (InCode : State → Prop)
+    (E F : State → State)
+    (hE : ∀ ψ : State, InCode ψ → InCode (E ψ))
+    (hF : ∀ ψ : State, InCode ψ → InCode (F ψ)) :
+    ∀ ψ : State, InCode ψ → InCode (F (E ψ)) := by
+   intro ψ
+   intro assu
+   have hEpsi : InCode (E ψ) := by
+    exact hE ψ assu
+   exact hF (E ψ) hEpsi
+
+theorem preserve_twice (State : Type)
+    (InCode : State → Prop)
+    (E F : State → State)
+    (hE : ∀ ψ : State, InCode ψ → InCode (E ψ))
+    (hF : ∀ ψ : State, InCode ψ → InCode (F ψ)) :
+    ∀ ψ : State, InCode ψ → InCode (F (E ψ)) := by
+  intro ψ
+  intro assu
+  have hEpsi : InCode (E ψ) := by
+    exact hE ψ assu
+  exact hF (E ψ) hEpsi
+#check preserve_twice
+
+example (State : Type)
+    (InCode : State → Prop)
+    (E : State → State)
+    (hE : ∀ ψ : State, InCode ψ → InCode (E ψ))
+    (ψ : State)
+    (hCode : InCode ψ) :
+    InCode (E (E ψ)) := by
+        exact preserve_twice State InCode E E hE hE ψ hCode
+
+
+example (State : Type)
+    (InCode : State → Prop)
+    (E F G : State → State)
+    (hE : ∀ ψ : State, InCode ψ → InCode (E ψ))
+    (hF : ∀ ψ : State, InCode ψ → InCode (F ψ))
+    (hG : ∀ ψ : State, InCode ψ → InCode (G ψ))
+    (ψ : State)
+    (hCode : InCode ψ) :
+    InCode (G (F (E ψ))) := by
+    have hEpsi : InCode (E ψ) := by
+     exact hE ψ hCode
+    have hFEpsi : InCode (F (E (ψ))) := by
+     exact preserve_twice State InCode E F hE hF ψ hCode
+    exact hG (F (E ψ)) hFEpsi
+
+example : ∃ n : ℕ, n + 2 = 5 := by
+  use 3
+
+example : ∃ n : ℕ, n + 4 = 10 := by
+  use 6
+
+example : ∃ n : ℕ, n + 2 = 7 ∧ n + 3 = 8 := by
+  use 5
+
+example (a : ℕ) : ∃ n : ℕ, n = a + 1 := by
+  use a + 1
+
+example : ∃ a b : ℕ, a + b = 10 ∧ a = b := by
+  use 5 , 5
+example (h : ∃ n : ℕ, n + 2 = 7) :
+    ∃ n : ℕ, n + 2 = 7 ∨ n + 2 = 8 := by
+  obtain ⟨n, hn⟩ := h
+  use n
+  left
+  exact hn
+
+example (h : ∃ n : ℕ, n + 2 = 7 ∧ n + 3 = 8) :
+    ∃ n : ℕ, n + 3 = 8 := by
+   obtain ⟨n, hn⟩ := h
+   use n
+   exact hn.right
+
+example (h : ∃ n : ℕ, n + 2 = 7 ∧ n + 3 = 8) :
+    ∃ n : ℕ, n + 3 = 8 ∧ n + 2 = 7 := by
+  obtain ⟨ n, hn⟩ :=h
+  use n
+  constructor
+  exact hn.right
+  exact hn.left
+
+
+example (P Q : ℕ → Prop)
+    (h : ∃ n : ℕ, P n)
+    (hPQ : ∀ n : ℕ, P n → Q n) :
+    ∃ n : ℕ, Q n := by
+     obtain ⟨ n, hn⟩ :=h
+     use n
+     exact hPQ n hn
+
+example (P Q R : ℕ → Prop)
+    (h : ∃ n : ℕ, P n ∨ Q n)
+    (hPR : ∀ n : ℕ, P n → R n)
+    (hQR : ∀ n : ℕ, Q n → R n) :
+    ∃ n : ℕ, R n := by
+   obtain ⟨ n, hn⟩ :=h
+   use n
+   cases hn with
+     | inl F1 =>
+       exact hPR n F1
+     | inr F2 =>
+       exact hQR n F2
+
+example (P Q : ℕ → Prop)
+    (hP : ∃ n : ℕ, P n)
+    (hQ : ∃ m : ℕ, Q m) :
+    ∃ n m : ℕ, P n ∧ Q m := by
+   obtain ⟨ n, hn⟩ :=hP
+   obtain ⟨ m, hm⟩ :=hQ
+   use n
+   use m
+
+example (a b : ℕ) : a + b = b + a := by
+  exact Nat.add_comm a b
+
+example (State : Type)
+    (InCode : State → Prop)
+    (S : State → State)
+    (hS : ∀ ψ, InCode ψ → S ψ = ψ)
+    (ψ : State)
+    (hψ : InCode ψ) :
+    S ψ = ψ := by
+  exact hS ψ hψ
+
+example (State : Type)
+    (InCode : State → Prop)
+    (S T : State → State)
+    (hS : ∀ ψ, InCode ψ → S ψ = ψ)
+    (hT : ∀ ψ, InCode ψ → T ψ = ψ)
+    (ψ : State)
+    (hψ : InCode ψ) :
+    S (T ψ) = ψ := by
+  rw [hT ψ hψ]
+  rw [hS ψ hψ]
+
+example (State : Type)
+    (InCode : State → Prop)
+    (S T : State → State)
+    (hS : ∀ ψ, InCode ψ → S ψ = ψ)
+    (hT : ∀ ψ, InCode ψ → T ψ = ψ) :
+    ∀ ψ, InCode ψ → S (T ψ) = ψ := by
+  intro ψ
+  intro hψ
+  rw [hT ψ hψ]
+  rw [hS ψ hψ]
+
+example (State : Type)
+    (S T : State → State)
+    (ψ : State)
+    (hψ : S ψ = ψ ∧ T ψ = ψ) :
+    S (T ψ) = ψ := by
+  rw [hψ.2]
+  exact hψ.1
+
+example (State : Type)
+    (S : State → State)
+    (ψ : State)
+    (hS : S ψ = ψ) :
+    S (S ψ) = ψ := by
+  rw [hS]
+  exact hS
+
+def InStabffilizerCode {State : Type}
+    (S T : State → State) (ψ : State) : Prop :=
+  S ψ = ψ ∧ T ψ = ψ
+
+example (State : Type) (S T : State → State)
+    (ψ : State) (hψ : InStabffilizerCode S T ψ) :
+    T ψ = ψ := by
+     exact hψ.2
+
+
+example (State : Type) (S T : State → State)
+    (ψ : State)
+    (hS : S ψ = ψ)
+    (hT : T ψ = ψ) :
+    InStabffilizerCode S T ψ := by
+      unfold InStabffilizerCode
+      constructor
+      exact hS
+      exact hT
+
+example (State : Type) (S T : State → State)
+    (ψ : State) (hψ : InStabffilizerCode S T ψ) :
+    InStabffilizerCode T S ψ := by
+    unfold InStabffilizerCode
+    constructor
+    exact hψ.2
+    exact hψ.1
+
+example (State : Type) (S T : State → State)
+    (ψ : State) (hψ : InStabffilizerCode S T ψ) :
+    S (T ψ) = ψ := by
+    rw [hψ.2]
+    exact hψ.1
+
+example (State : Type) (S T : State → State) :
+    ∀ ψ, InStabffilizerCode S T ψ →
+      (S (T ψ) = ψ ∧ T (S ψ) = ψ) := by
+
+    intro ψ hψ
+    constructor
+    rw [hψ.2]
+    exact hψ.1
+    rw [hψ.1]
+    exact hψ.2
+
+example (d : ℕ) (hd : 3 ≤ d) :
+    1 ≤ (d - 1) / 2 := by
+  omega
+
+example (n d : ℕ)
+    (hSentinel : d = n + 1)
+    (hBound : d ≤ n) :
+    False := by
+    --obviously true
+  omega
+
+example (n d : ℕ) (EmptyErrors : Prop)
+    (hEmpty : EmptyErrors → d = n + 1)
+    (hBound : d ≤ n) :
+    ¬ EmptyErrors := by
+  intro hE
+  have hD : d = n + 1 := hEmpty hE
+  omega
+
+example (n d : ℕ) (EmptyErrors A B : Prop)
+    (hEmpty : EmptyErrors → d = n + 1)
+    (hA : A → d ≤ n)
+    (hB : B → d ≤ n)
+    (hEither : A ∨ B) :
+    ¬ EmptyErrors := by
+  intro hE
+  have hD : d = n + 1 := hEmpty hE
+  cases hEither with
+  | inl F1 =>
+      have hbbb : d ≤ n := hA F1
+      omega
+  | inr F2 =>
+      have hccc : d ≤ n := hB F2
+      omega
