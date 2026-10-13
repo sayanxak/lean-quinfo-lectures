@@ -1045,3 +1045,40 @@ example (n d : ℕ) (EmptyErrors A B : Prop)
   | inr F2 =>
       have hccc : d ≤ n := hB F2
       omega
+
+example (d : ℕ) (GoodCode : Prop)
+    (hDistance : GoodCode → 5 ≤ d) :
+    GoodCode → 2 ≤ (d - 1) / 2 := by
+  intro F
+  have hF: 5 ≤ d := hDistance F
+  omega
+
+example (d : ℕ) (GoodCode : Prop)
+    (hDistance : GoodCode → 7 ≤ d) :
+    GoodCode → 3 ≤ (d - 1) / 2 := by
+  intro gf
+  have hgf : 7 ≤ d := hDistance gf
+  omega
+
+example (d : ℕ) (A B : Prop)
+    (hA : A → 5 ≤ d)
+    (hB : B → 7 ≤ d)
+    (hEither : A ∨ B) :
+    2 ≤ (d - 1) / 2 := by
+  cases hEither with
+  | inl F1 =>
+      have hhA : 5 ≤ d := hA F1
+      omega
+  | inr F2 =>
+      have hhB : 7 ≤ d := hB F2
+      omega
+
+example (n : ℕ)
+    (h : ∃ d : ℕ, 5 ≤ d ∧ d ≤ n) :
+    ∃ d : ℕ, d ≤ n ∧ 2 ≤ (d - 1) / 2 := by
+  obtain ⟨d, hd⟩ := h
+  use d
+  constructor
+  · exact hd.2
+  · have hhd : 5 ≤ d := hd.1
+    omega
