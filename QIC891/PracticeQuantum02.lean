@@ -1082,3 +1082,52 @@ example (n : ℕ)
   · exact hd.2
   · have hhd : 5 ≤ d := hd.1
     omega
+
+example (State : Type) (ψ : State)
+    (E R S : State → State)
+    (hRecover : R (E ψ) = ψ)
+    (hFix : S ψ = ψ) :
+    S (R (E ψ)) = ψ := by
+  rw [hRecover]
+  exact hFix
+
+example (A B C : Prop)
+    (h : A ∨ B)
+    (hAC : A → C)
+    (hBC : B → C) : C := by
+  cases h with
+  | inl F1 =>
+      let L := hAC F1
+      exact L
+  | inr F2 =>
+      let M := hBC F2
+      exact M
+
+example (P Q : ℕ → Prop)
+    (h : ∃ n : ℕ, P n ∧ Q n) :
+    ∃ n : ℕ, Q n := by
+  obtain ⟨n, hn⟩ := h
+  use n
+  exact hn.2
+
+example (P Q : Prop) (hPQ : P → Q) :
+    P → (Q ∧ P) := by
+  intro hP
+  let M := hPQ hP
+  constructor
+  · exact M
+  · exact hP
+
+example (State : Type) (E : State → State)
+    (hEE : ∀ ψ : State, E (E ψ) = ψ)
+    (ψ : State) :
+    E (E (E ψ)) = E ψ := by
+  rw [hEE ψ]
+
+example (P Q : ℕ → Prop)
+    (h : ∃ n : ℕ, P n)
+    (hRule : ∀ n : ℕ, P n → Q (n + 1)) :
+    ∃ m : ℕ, Q m := by
+  obtain ⟨n, hn⟩ := h
+  have hhA : Q (n + 1) := hRule n hn
+  use n + 1
