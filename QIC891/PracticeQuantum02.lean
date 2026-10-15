@@ -1131,3 +1131,201 @@ example (P Q : ℕ → Prop)
   obtain ⟨n, hn⟩ := h
   have hhA : Q (n + 1) := hRule n hn
   use n + 1
+
+example (P Q : ℕ → Prop)
+    (h : ∃ n : ℕ, P n)
+    (hRule : ∀ n : ℕ, P n → Q n) :
+    ∃ n : ℕ, P n ∧ Q n := by
+   obtain ⟨ n, hn⟩ := h
+   use n
+   constructor
+   exact hn
+   exact hRule n hn
+
+example {State : Type} (E R : State → State)
+    (ψ : State) (hRecover : R (E ψ) = ψ) :
+    E (R (E ψ)) = E ψ := by
+   rw [hRecover]
+
+example (A B : Prop)
+    (hEither : A ∨ B)
+    (hNotA : ¬ A) : B := by
+    cases hEither with
+     | inl hA =>
+      exfalso
+      exact hNotA hA
+     |  inr hB =>
+      exact hB
+
+example (n : ℕ)
+    (hLow : 4 ≤ n) (hHigh : n ≤ 6)
+    (hNotFour : n ≠ 4) (hNotSix : n ≠ 6) :
+    n = 5 := by
+    omega
+
+
+example (n : ℕ) (A B : Prop)
+    (hEither : A ∨ B)
+    (hA : A → 5 ≤ n)
+    (hB : B → 8 ≤ n) :
+    5 ≤ n := by
+    cases hEither with
+      | inl hhA =>
+      have hhhA: 5 ≤ n := hA hhA
+      exact hhhA
+      | inr hhB =>
+        have hhhB: 8 ≤ n := hB hhB
+        omega
+
+example (P Q : ℕ → Prop)
+    (h : ∃ n : ℕ, P n)
+    (hDouble : ∀ n : ℕ, P n → Q (2 * n)) :
+    ∃ m : ℕ, Q m := by
+   obtain ⟨ n, hn⟩ := h
+   have hhd: Q (2 * n) := hDouble n hn
+   let m := 2 * n
+   use m
+
+example {State : Type} (E F G : State → State)
+    (ψ : State) (hUndo : ∀ φ, F (E φ) = φ) :
+    G (F (E ψ)) = G ψ := by
+    rw [hUndo]
+
+example (A B C : Prop)
+    (hAB : A → B) (hAC : A → C) :
+    A → (B ∧ C) := by
+  intro hA
+  constructor
+  exact hAB hA
+  exact hAC hA
+
+example : (Qubit.X * Qubit.H) * Qubit.H = Qubit.X := by
+  rw [mul_assoc]
+  rw [Qubit.H_sq]
+  rw [mul_one]
+
+example :
+    (Qubit.T * Qubit.T) * (Qubit.T * Qubit.T) = Qubit.Z := by
+  rw [Qubit.T_sq]
+  rw [Qubit.S_sq]
+
+
+example :
+    ((Qubit.T * Qubit.T) * (Qubit.T * Qubit.T)) * Qubit.Z = 1 := by
+    rw [Qubit.T_sq]
+    rw [Qubit.S_sq]
+    rw [Qubit.Z_sq]
+
+
+example :
+    (Qubit.H * (Qubit.X * Qubit.X)) * Qubit.H = 1 := by
+   rw [Qubit.X_sq]
+   rw [mul_one]
+   rw [Qubit.H_sq]
+
+example {State : Type}
+    (S T : State → State) (ψ : State)
+    (hS : S ψ = ψ) (hT : T ψ = ψ) :
+    S (T ψ) = ψ := by
+  rw [hT]
+  exact hS
+
+example {State : Type}
+    (S E : State → State) (ψ : State)
+    (hS : S ψ = ψ)
+    (hComm : ∀ φ, S (E φ) = E (S φ)) :
+    S (E ψ) = E ψ := by
+   rw [hComm ψ]
+   rw [hS]
+
+example {State : Type}
+    (S T E : State → State) (ψ : State)
+    (hS : S ψ = ψ) (hT : T ψ = ψ)
+    (hSE : ∀ φ, S (E φ) = E (S φ))
+    (hTE : ∀ φ, T (E φ) = E (T φ)) :
+    S (E ψ) = E ψ ∧ T (E ψ) = E ψ := by
+    constructor
+    rw [hSE ψ]
+    rw [hS]
+    rw [hTE ψ]
+    rw [hT]
+
+example {State Index : Type}
+    (S : Index → State → State)
+    (E : State → State) (ψ : State)
+    (hFixed : ∀ i, S i ψ = ψ)
+    (hComm : ∀ i φ, S i (E φ) = E (S i φ)) :
+    ∀ i, S i (E ψ) = E ψ := by
+  intro i
+  rw [hComm i ψ]
+  rw [hFixed]
+
+example {State : Type}
+    (S T : State → State) (ψ : State)
+    (hS : S ψ = ψ) (hT : T ψ = ψ) :
+    S (T ψ) = ψ := by
+  calc
+    S (T ψ) = S ψ := by
+      rw [hT]
+    _ = ψ := by
+      exact hS
+
+
+example {State : Type}
+    (S E : State → State) (ψ : State)
+    (hS : S ψ = ψ)
+    (hComm : ∀ φ, S (E φ) = E (S φ)) :
+    S (E ψ) = E ψ := by
+  calc
+    S (E ψ) = E (S ψ) := by
+      rw [hComm ψ]
+    _ = E ψ := by
+      rw [hS]
+
+
+example {State : Type}
+    (S T U : State → State) (ψ : State)
+    (hS : S ψ = ψ)
+    (hT : T ψ = ψ)
+    (hU : U ψ = ψ) :
+    S (T (U ψ)) = ψ := by
+  rw [hU]
+  rw [hT]
+  rw [hS]
+
+example {State : Type} (E : State → State)
+    (hE : ∀ ψ, E (E ψ) = ψ) :
+    (fun ψ => E (E ψ)) = (fun ψ => ψ) := by
+  funext ψ
+  exact hE ψ
+
+example {State : Type} (S E : State → State)
+    (hComm : ∀ ψ, S (E ψ) = E (S ψ)) :
+    (fun ψ => S (E ψ)) = (fun ψ => E (S ψ)) := by
+  funext ψ
+  exact hComm ψ
+
+example {State : Type} (S E : State → State)
+    (hUndo : ∀ ψ, E (E ψ) = ψ) :
+    (fun ψ => S (E (E ψ))) = S := by
+  funext ψ
+  rw [hUndo]
+
+example (f g : ℕ → ℕ → ℕ)
+    (h : ∀ a b, f a b = g a b) :
+    f = g := by
+  funext a b
+  exact h a b
+
+example :
+    (fun a b : ℕ => a + b) = (fun a b : ℕ => b + a) := by
+  funext a b
+  rw [Nat.add_comm]
+
+example {State : Type} (E F : State → State)
+    (hE : ∀ ψ, E (E ψ) = ψ)
+    (hF : ∀ ψ, F (F ψ) = ψ) :
+    (fun ψ => E (F (F (E ψ)))) = (fun ψ => ψ) := by
+  funext ψ
+  rw [hF (E ψ)]
+  rw [hE (ψ)]
