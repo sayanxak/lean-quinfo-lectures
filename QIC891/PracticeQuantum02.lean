@@ -1329,3 +1329,78 @@ example {State : Type} (E F : State → State)
   funext ψ
   rw [hF (E ψ)]
   rw [hE (ψ)]
+
+example {State : Type} (E R : State → State)
+    (hRecover : ∀ ψ, R (E ψ) = ψ) :
+    (fun ψ => E (R (E ψ))) = E := by
+  funext ψ
+  rw [hRecover ψ]
+
+example {State : Type}
+    (S T U : State → State) (ψ : State)
+    (hS : S ψ = ψ)
+    (hT : T ψ = ψ)
+    (hU : U ψ = ψ) :
+    S (T (U ψ)) = ψ := by
+  rw [hU]
+  rw [hT]
+  rw [hS]
+
+example {State : Type} (E R : State → State)
+    (hRecover : ∀ ψ, R (E ψ) = ψ) :
+    ∀ a b, E a = E b → a = b := by
+  intro a b
+  intro hab
+  calc
+    a = R (E a) := by
+      exact (hRecover a).symm
+    _ = R (E b) := by
+      rw [hab]
+    _ = b := by
+      rw [hRecover b]
+
+
+example {State : Type} (E S : State → State)
+    (hFixed : ∀ ψ, S (E ψ) = E ψ)
+    (φ : State)
+    (hEncoded : ∃ ψ, E ψ = φ) :
+    S φ = φ := by
+  obtain ⟨ψ, hpsi⟩ := hEncoded
+  calc
+    S φ = S (E ψ) := by
+      rw [← hpsi]
+    _ = E ψ := by
+      rw [hFixed ψ]
+    _ = φ := by
+      exact hpsi
+
+example (State : Type) (Good : State → Prop)
+    (E : State → State)
+    (hGood : ∀ ψ, Good (E ψ))
+    (φ : State)
+    (hEncoded : ∃ ψ, E ψ = φ) :
+    Good φ := by
+  obtain ⟨ψ, hpsi⟩ := hEncoded
+  have hhgood : Good (E ψ) := hGood ψ
+  rw [← hpsi]
+  exact hhgood
+
+example (n : ℕ) :
+    ∃ m : ℕ, n < m ∧ m < n + 3 := by
+  let m := n + 1
+  use m
+  constructor
+  · omega
+  · omega
+
+example (n : ℕ) :
+    ¬ (∃ m : ℕ, n < m ∧ m < n + 1) := by
+  intro h
+  obtain ⟨m, hm⟩ := h
+  omega
+
+example (n : ℕ) :
+    ¬ (∃ m : ℕ, n + 2 < m ∧ m < n + 3) := by
+  intro h
+  obtain ⟨m, hm⟩ := h
+  omega
