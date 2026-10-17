@@ -102,4 +102,93 @@ example (ψ : TwoQubitVector)
     exact neg_zero
   · rfl
 
+-- Session: 17 October 2026. Characterize all fixed vectors.
+theorem zz_fixed_iff (ψ : TwoQubitVector) :
+    zzAction ψ = ψ ↔ ψ 1 = 0 ∧ ψ 2 = 0 := by
+  constructor
+  · intro h
+    have h1 : -ψ 1 = ψ 1 := congrFun h 1
+    have h2 : -ψ 2 = ψ 2 := congrFun h 2
+    constructor
+    · exact CharZero.neg_eq_self_iff.mp h1
+    · exact CharZero.neg_eq_self_iff.mp h2
+  · intro h
+    ext i
+    fin_cases i
+    · rfl
+    · change -ψ 1 = ψ 1
+      rw [h.1]
+      exact neg_zero
+    · change -ψ 2 = ψ 2
+      rw [h.2]
+      exact neg_zero
+    · rfl
+
+-- Warm-up: extract and reverse coordinate conditions.
+example (ψ : TwoQubitVector) (h : ψ 1 = 0 ∧ ψ 2 = 0) :
+    ψ 2 = 0 := by
+  exact h.2
+
+example (ψ : TwoQubitVector) (h : ψ 1 = 0 ∧ ψ 2 = 0) :
+    ψ 2 = 0 ∧ ψ 1 = 0 := by
+  constructor
+  · exact h.2
+  · exact h.1
+
+example (ψ : TwoQubitVector) (h1 : ψ 1 = 0) :
+    zzAction ψ 1 = ψ 1 := by
+  change -ψ 1 = ψ 1
+  rw [h1]
+  exact neg_zero
+
+example (ψ : TwoQubitVector) (h : zzAction ψ = ψ) :
+    -ψ 2 = ψ 2 := by
+  have h2 := congrFun h 2
+  exact h2
+
+example (ψ : TwoQubitVector) (h : zzAction ψ = ψ) :
+    ψ 2 = 0 := by
+  have h2 : -ψ 2 = ψ 2 := congrFun h 2
+  exact CharZero.neg_eq_self_iff.mp h2
+
+example (ψ : TwoQubitVector) (h : zzAction ψ = ψ) :
+    ψ 1 = 0 ∧ ψ 2 = 0 := by
+  have h1 : -ψ 1 = ψ 1 := congrFun h 1
+  have h2 : -ψ 2 = ψ 2 := congrFun h 2
+  constructor
+  · exact CharZero.neg_eq_self_iff.mp h1
+  · exact CharZero.neg_eq_self_iff.mp h2
+
+-- Use the forward and reverse directions of the named theorem.
+example (ψ : TwoQubitVector) (h : zzAction ψ = ψ) :
+    ψ 1 = 0 := by
+  have m : ψ 1 = 0 := ((zz_fixed_iff ψ).mp h).1
+  exact m
+
+example (ψ : TwoQubitVector)
+    (h1 : ψ 1 = 0) (h2 : ψ 2 = 0) :
+    zzAction ψ = ψ := by
+  have h : ψ 1 = 0 ∧ ψ 2 = 0 := by
+    constructor
+    · exact h1
+    · exact h2
+  have m : zzAction ψ = ψ := (zz_fixed_iff ψ).mpr h
+  exact m
+
+example (ψ : TwoQubitVector) (h : ψ 2 = 0 ∧ ψ 1 = 0) :
+    zzAction ψ = ψ := by
+  have k : ψ 1 = 0 ∧ ψ 2 = 0 := by
+    constructor
+    · exact h.2
+    · exact h.1
+  have m : zzAction ψ = ψ := ((zz_fixed_iff ψ).mpr) k
+  exact m
+
+-- Resume here next session. Not attempted yet; no solution supplied.
+example (ψ φ : TwoQubitVector)
+    (hψ : ψ 1 = 0 ∧ ψ 2 = 0)
+    (hφ : φ 1 = 0 ∧ φ 2 = 0) :
+    zzAction ψ = ψ ∧ zzAction φ = φ := by
+  sorry
+
 end ZZCodespace
