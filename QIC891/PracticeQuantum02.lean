@@ -1404,3 +1404,608 @@ example (n : ℕ) :
   intro h
   obtain ⟨m, hm⟩ := h
   omega
+
+-- 1. Warm-up: use the implication.
+example (A B : Prop) (hA : A) (hAB : A → B) : B := by
+  exact hAB hA
+
+-- 2. Build a pair, reversing the order.
+example (A B : Prop) (h : A ∧ B) : B ∧ A := by
+  constructor
+  exact h.2
+  exact h.1
+
+-- 3. Follow two implications.
+example (A B C : Prop)
+    (hAB : A → B) (hBC : B → C) : A → C := by
+  intro h
+  have hh: B:= hAB h
+  exact hBC hh
+
+-- 4. Prove the right side of an “or”.
+example (A B C : Prop)
+    (h : A ∧ B) (hBC : B → C) : A ∨ C := by
+  right
+  exact hBC h.2
+
+-- 5. Handle both possible cases.
+example (A B C : Prop)
+    (h : A ∨ B) (hAC : A → C) : C ∨ B := by
+  cases h with
+    | inl hh =>
+     left
+     exact hAC hh
+    | inr hk =>
+     right
+     exact hk
+
+-- 1. Keep the first part and transform the second.
+example (A B C : Prop)
+    (h : A ∧ B) (hBC : B → C) : A ∧ C := by
+  constructor
+  exact h.1
+  exact hBC h.2
+
+-- 2. One assumption gives two results.
+example (A B C : Prop)
+    (hAB : A → B) (hAC : A → C) : A → (B ∧ C) := by
+  intro h
+  constructor
+  exact hAB h
+  exact hAC h
+
+-- 3. Swap the alternatives.
+example (A B : Prop) (h : A ∨ B) : B ∨ A := by
+  cases h with
+    | inl h =>
+     right
+     exact h
+    | inr hh=>
+      left
+      exact hh
+
+-- 4. Either route reaches the same goal.
+example (A B C : Prop)
+    (h : A ∨ B) (hAC : A → C) (hBC : B → C) : C := by
+    cases h with
+      |inl hh =>
+       exact hAC hh
+      | inr hhh=>
+       exact hBC hhh
+
+
+
+-- 5. Small challenge: rearrange a nested pair.
+example (A B C : Prop)
+    (h : A ∧ (B ∧ C)) : (C ∧ A) ∧ B := by
+  constructor
+  constructor
+  exact (h.2).2
+  exact h.1
+  exact (h.2).1
+
+-- 1. An impossible assumption proves any proposition.
+-- Hint: `exact False.elim h`
+example (A : Prop) (h : False) : A := by
+ exact False.elim h
+
+
+-- 2. A statement and its negation contradict each other.
+-- `¬ A` means `A → False`.
+-- Hint: apply hNotA to hA.
+example (A : Prop) (hA : A) (hNotA : ¬ A) : False := by
+  exact hNotA hA
+
+-- 3. Prove a negation by assuming what you want to rule out.
+-- Hint: `intro hA`, then derive B and contradict hNotB.
+example (A B : Prop)
+    (hAB : A → B) (hNotB : ¬ B) : ¬ A := by
+  intro hA
+  have hB : B := hAB hA
+  have h: False := hNotB hB
+  exact False.elim h
+
+
+-- 4. Prove both directions of an equivalence.
+-- Hint: `constructor` gives two implication goals.
+example (A B : Prop) : (A ∧ B) ↔ (B ∧ A) := by
+  constructor
+  intro hAB
+  constructor
+  exact hAB.2
+  exact hAB.1
+  intro hBA
+  constructor
+  exact hBA.2
+  exact hBA.1
+
+-- 5. Give a concrete witness.
+-- Hint: `use 4`, then `rfl`.
+example : ∃ n : Nat, n + 1 = 5 := by
+  use 4
+
+-- 1. Warm-up: extract one fact.
+example (A B : Prop) (h : A ∧ B) : A := by
+  exact h.1
+
+-- 2. Follow an implication, then choose a side.
+example (A B C : Prop) (hA : A) (hAB : A → B) :
+    C ∨ B := by
+  right
+  exact hAB hA
+
+-- 3. Keep A and derive C.
+example (A B C : Prop) (h : A ∧ B) (hBC : B → C) :
+    A ∧ C := by
+  constructor
+  exact h.1
+  exact hBC h.2
+
+-- 4. Start by introducing the assumption.
+example (A B : Prop) : A → (A ∨ B) := by
+  intro h
+  left
+  exact h
+
+-- 5. Small challenge: consider both cases of h.
+example (A B C : Prop) (h : A ∨ B) (hBC : B → C) :
+    A ∨ C := by
+  cases h with
+    | inl hh =>
+     left
+     exact hh
+    | inr hhh =>
+     right
+     exact hBC hhh
+
+-- 1. Warm-up: no calculation needed.
+example (n : Nat) : n = n := by
+  rfl
+
+-- 2. Replace a with b.
+example (a b : Nat) (h : a = b) : a + 3 = b + 3 := by
+  rw [h]
+
+-- 3. Follow a chain of equalities.
+example (a b c : Nat) (h₁ : a = b) (h₂ : b = c) :
+    a = c := by
+  rw [h₁]
+  rw [h₂]
+
+-- 4. Use an equality backwards.
+example (a b : Nat) (h : a = b) : b = a := by
+  symm
+  exact h
+
+-- 5. Rewrite two different variables.
+example (a b c d : Nat) (h₁ : a = b) (h₂ : c = d) :
+    a + c = b + d := by
+  rw [h₁]
+  rw [h₂]
+
+-- 1. Rewrite inside multiplication.
+example (a b : Nat) (h : a = b) :
+    2 * a + 1 = 2 * b + 1 := by
+  rw [h]
+
+-- 2. Rewrite backwards to use a known value.
+example (a b : Nat) (h : a = b) (ha : a = 7) :
+    b = 7 := by
+  rw[←h]
+  exact ha
+
+-- 3. Rewrite inside a hypothesis.
+-- Hint: rw [h] at ha
+example (a b : Nat) (h : a = b) (ha : a + 2 = 9) :
+    b + 2 = 9 := by
+  rw [← h]
+  exact ha
+
+-- 4. Combine a chain with an expression.
+example (a b c : Nat) (h₁ : a = b) (h₂ : b = c) :
+    a * a = c * c := by
+  rw [h₁]
+  rw [h₂]
+
+-- 5. Rewrite using a whole expression.
+example (a b c : Nat) (h : a + b = c) :
+    (a + b) * (a + b) = c * c := by
+  rw [h]
+
+-- 1. Two equalities pointing in different directions.
+example (a b c : Nat) (h₁ : b = a) (h₂ : b = c) :
+    a = c := by
+  rw [← h₁]
+  exact h₂
+
+-- 2. Rewrite with an equality hidden inside ∧.
+example (a b : Nat) (h : a = b ∧ b = 5) :
+    a = 5 := by
+  rw [h.1]
+  exact h.2
+
+-- 3. Prove two equalities together.
+example (a b c : Nat) (h₁ : a = b) (h₂ : b = c) :
+    (a = c) ∧ (c = a) := by
+  constructor
+  rw [h₁]
+  exact h₂
+  rw [← h₂]
+  symm
+  exact h₁
+
+-- 4. Either assumption should lead to the same answer.
+example (a : Nat) (h : a = 3 ∨ a = 4) :
+    a = 4 ∨ a = 3 := by
+  cases h with
+    |inl hh =>
+    right
+    exact hh
+    | inr hhh =>
+     left
+     exact hhh
+
+-- 5. Split into cases, then rewrite.
+example (a b c : Nat) (h : a = b ∨ a = c) :
+    (a + 1 = b + 1) ∨ (a + 1 = c + 1) := by
+    cases h with
+    |inl hh =>
+    left
+    rw [hh]
+    | inr hhh =>
+     right
+     rw [hhh]
+
+-- 1. Rewrite backwards inside an expression.
+example (a b : Nat) (h : b = a) :
+    a + 2 = b + 2 := by
+  rw [← h]
+
+-- 2. Extract two equalities and chain them.
+example (a b c : Nat) (h : a = b ∧ c = b) :
+    a = c := by
+  rw [h.2]
+  rw [h.1]
+
+-- 3. Introduce an assumption, then rewrite.
+example (a b : Nat) :
+    a = b → a * 3 = b * 3 := by
+  intro h
+  rw [h]
+
+-- 4. Build a conjunction using one equality.
+example (a b : Nat) (h : a = b) :
+    (a + 1 = b + 1) ∧ (b + 2 = a + 2) := by
+  constructor
+  rw [h]
+  rw [h]
+
+-- 5. Both cases lead to the same equality.
+example (a b c : Nat)
+    (h : a = b ∨ a = c) (hbc : b = c) :
+    a = c := by
+  cases h with
+   | inl hh =>
+    rw [← hbc]
+    exact hh
+   | inr hhh =>
+     exact hhh
+
+example (a b c d : Nat)
+    (h : (a = b ∧ c = d) ∨ (a = d ∧ c = b)) :
+    (a + c = b + d) ∨ (a + c = d + b) := by
+  cases h with
+   | inl hh =>
+   left
+   rw [hh.1]
+   rw [hh.2]
+   | inr hhh =>
+   right
+   rw [hhh.1]
+   rw [hhh.2]
+
+-- 1. Reverse an equality.
+example (a b : Nat) (h : a = b) : b = a := by
+  symm
+  exact h
+
+-- 2. Use both parts of a conjunction.
+example (a b : Nat) (h : a = b ∧ b = 3) :
+    a + 2 = 3 + 2 := by
+  rw [h.1]
+  rw [h.2]
+
+-- 3. Build two conclusions from one assumption.
+example (P Q R : Prop) (hPQ : P → Q) (hPR : P → R) :
+    P → (Q ∧ R) := by
+  intro h
+  constructor
+  exact hPQ h
+  exact hPR h
+
+-- 4. Either case gives the same result.
+example (a b c : Nat)
+    (h : a = b ∨ a = c) (hbc : b = c) :
+    a = c := by
+  cases h with
+    |inl hh =>
+    rw [hh]
+    exact hbc
+    | inr hhh =>
+     exact hhh
+
+-- 5. A contradiction rules out one side.
+example (P Q : Prop) (h : P ∨ Q) (hnP : ¬ P) : Q := by
+    cases h with
+    |inl hh =>
+    have h: False := hnP hh
+    exact False.elim h
+    | inr hhh =>
+     exact hhh
+
+-- 1. From False, prove any proposition.
+example (P : Prop) (h : False) : P := by
+  exact False.elim h
+
+-- 2. Use contradictory assumptions.
+example (P Q : Prop) (hP : P) (hnP : ¬ P) : Q := by
+  have h: False := hnP hP
+  exact False.elim h
+
+-- 3. Extract the contradiction from a conjunction.
+example (P Q : Prop) (h : P ∧ ¬ P) : Q := by
+  have hh: False := h.2 h.1
+  exact False.elim hh
+
+-- 4. One case is impossible; the other gives Q.
+example (P Q : Prop) (h : P ∨ Q) (hnP : ¬ P) : Q := by
+  cases h with
+   |inl hh =>
+    have hh: False := hnP hh
+    exact False.elim hh
+   |inr hhh =>
+    exact hhh
+
+
+-- 5. Derive Q, then use ¬ Q to reach a contradiction.
+example (P Q R : Prop)
+    (h : P ∨ R) (hPQ : P → Q) (hnQ : ¬ Q) : R := by
+  cases h with
+   |inl hh =>
+    have hh: False := hnQ (hPQ (hh))
+    exact False.elim hh
+   |inr hh =>
+    exact hh
+
+
+-- 1. Extract a fact, then use an implication.
+example (P Q R : Prop)
+    (h : P ∧ Q) (hQR : Q → R) : R := by
+  exact hQR h.2
+
+-- 2. Rewrite using a known value.
+example (a b : Nat) (hab : a = b) (hb : b = 6) :
+    a + 1 = 7 := by
+  rw [hab, hb]
+
+-- 3. Build two conclusions from one assumption.
+example (P Q : Prop) (hPQ : P → Q) :
+    P → (Q ∧ P) := by
+  intro h
+  constructor
+  exact hPQ h
+  exact h
+
+-- 4. Rule out the right-hand alternative.
+example (P Q : Prop) (h : P ∨ Q) (hnQ : ¬ Q) :
+    P := by
+  cases h with
+   | inl hp =>
+    exact hp
+   | inr hq =>
+   have hhh : False := hnQ hq
+   exact False.elim hhh
+
+
+-- 5. Practice proving a negation.
+example (P Q : Prop) (hPQ : P → Q) (hnQ : ¬ Q) :
+    ¬ P := by
+  intro h
+  have hhq : Q := hPQ h
+  have hf : False := hnQ hhq
+  exact False.elim hf
+
+
+-- 1. Use the first fact to obtain the second.
+example (P Q : Prop) (h : P ∧ (P → Q)) : Q := by
+  exact h.2 h.1
+
+-- 2. Chain two equalities, then rewrite.
+example (a b c : Nat) (hab : a = b) (hbc : b = c) :
+    a + 2 = c + 2 := by
+  rw [hab]
+  rw [hbc]
+
+-- 3. Keep one fact and derive another.
+example (P Q R : Prop) (h : P ∧ Q) (hPR : P → R) :
+    Q ∧ R := by
+  constructor
+  exact h.2
+  exact hPR h.1
+
+-- 4. Both alternatives lead to R.
+example (P Q R : Prop)
+    (h : P ∨ Q) (hPR : P → R) (hQR : Q → R) :
+    R := by
+  cases h with
+   | inl hhh =>
+    exact hPR hhh
+   | inr hhhh =>
+    exact hQR hhhh
+
+-- 5. A small negation exercise.
+-- Hint: after introducing h, use h.1 and h.2.
+example (P Q : Prop) (hnQ : ¬ Q) :
+    ¬ (P ∧ Q) := by
+  intro h
+  have hh : False := hnQ h.2
+  exact False.elim hh
+
+-- 1. Extract a fact from a nested conjunction.
+example (P Q R : Prop) (h : P ∧ (Q ∧ R)) : Q := by
+  exact (h.2).1
+
+-- 2. Use an equality in the reverse direction.
+example (a b : Nat) (h : b = a) (hb : b = 4) :
+    a = 4 := by
+  rw [← h]
+  exact hb
+
+-- 3. Build a pair containing an “or”.
+example (P Q R : Prop) (hP : P) (hR : R) :
+    P ∧ (Q ∨ R) := by
+  constructor
+  exact hP
+  right
+  exact hR
+
+-- 4. Transform either alternative.
+example (P Q R : Prop) (h : P ∨ Q) (hQR : Q → R) :
+    P ∨ R := by
+ cases h with
+  |inl hhh =>
+   left
+   exact hhh
+  |inr hhhh=>
+   right
+   exact hQR hhhh
+
+-- 5. An implication prevents P and ¬ Q from holding together.
+example (P Q : Prop) (hPQ : P → Q) :
+    ¬ (P ∧ ¬ Q) := by
+  intro h
+  have hhh : Q := hPQ h.1
+  have hF: False := h.2 hhh
+  exact False.elim hF
+
+
+example (P Q R : Prop)
+    (h : P ∧ Q) (hQR : Q → R) : R ∧ P := by
+   constructor
+   exact hQR h.2
+   exact h.1
+
+example (a b : Nat) (hab : b = a) (hb : b = 5) :
+    a + 2 = 7 := by
+  rw [← hab]
+  rw [hb]
+
+example (P Q R : Prop)
+    (h : P ∨ Q) (hPR : P → R) : Q ∨ R := by
+  cases h with
+   |inl hhh =>
+    right
+    exact hPR hhh
+   |inr h4 =>
+    left
+    exact h4
+
+example (P Q R : Prop)
+    (hPQ : P → Q) (hnQ : ¬ Q) : ¬ (P ∧ R) := by
+  intro h
+  have hh: Q := hPQ h.1
+  have hhh: False := hnQ hh
+  exact False.elim hhh
+
+example (P Q R : Prop)
+    (h : P ∨ Q) (hPR : P → R) (hnR : ¬ R) : Q := by
+  cases h with
+   |inl hh =>
+    have hhh: R := hPR hh
+    have hF: False := hnR hhh
+    exact False.elim hF
+   | inr hhh=>
+    exact hhh
+
+example (P Q R : Prop)
+    (hPQ : P → Q) (hQR : Q → R) :
+    (P → R) ∧ (P → Q) := by
+    constructor
+    intro h
+    exact hQR (hPQ h)
+    intro h
+    exact hPQ h
+
+
+example (a b c : Nat)
+    (hab : a = b) (hbc : b = c) (ha : a + 3 = 10) :
+    c + 3 = 10 := by
+   rw [← hbc, ← hab]
+   exact ha
+
+example (P Q R : Prop) (h : P ∧ (Q ∨ R)) :
+    (P ∧ Q) ∨ (P ∧ R) := by
+  cases h.2 with
+   | inl hhh =>
+    left
+    constructor
+    exact h.1
+    exact hhh
+   | inr hhhh =>
+    right
+    constructor
+    exact h.1
+    exact hhhh
+
+
+
+example (P Q R : Prop)
+    (hPR : P → R) (hQR : Q → R) (hnR : ¬ R) :
+    ¬ (P ∨ Q) := by
+    intro h
+    cases h with
+     |inl hh =>
+      have hR : R := hPR hh
+      have hF : False := hnR hR
+      exact False.elim hF
+     | inr hhh =>
+      have hR : R := hQR hhh
+      have hF : False := hnR hR
+      exact False.elim hF
+
+
+
+example (P Q : Prop) (h : ¬ P ∨ Q) : P → Q := by
+  intro h4
+  cases h with
+   |inl hh =>
+    have hF : False := hh h4
+    exact False.elim hF
+   | inr hhh =>
+    exact hhh
+
+example (P Q R S T : Prop)
+    (h : (P ∧ Q) ∨ (R ∧ S))
+    (hPT : P → T)
+    (hRT : R → T)
+    (hPQ : P → Q)
+    (hQS : Q → S)
+    (hnQ : ¬ Q) :
+    T ∧ (S ∧ ¬ P) := by
+  cases h with
+   | inl hh =>
+    constructor
+    exact hPT hh.1
+    constructor
+    exact hQS hh.2
+    have hF : False := hnQ hh.2
+    exact False.elim hF
+   | inr hr =>
+    constructor
+    exact hRT hr.1
+    constructor
+    exact hr.2
+    intro hP
+    have hhQ : Q := hPQ hP
+    have hF : False := hnQ hhQ
+    exact False.elim hF
