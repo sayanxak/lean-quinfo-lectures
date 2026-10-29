@@ -2009,3 +2009,409 @@ example (P Q R S T : Prop)
     have hhQ : Q := hPQ hP
     have hF : False := hnQ hhQ
     exact False.elim hF
+
+-- 1. Follow two implications and keep the starting fact.
+example (P Q R : Prop)
+    (hP : P) (hPQ : P → Q) (hQR : Q → R) :
+    P ∧ R := by
+  constructor
+  exact hP
+  exact (hQR (hPQ hP))
+
+-- 2. Combine equalities pointing in different directions.
+example (a b c : Nat)
+    (hab : a = b) (hcb : c = b) :
+    a + 3 = c + 3 := by
+  rw [hab, ← hcb]
+
+-- 3. Keep P, whichever alternative holds.
+example (P Q R : Prop) (h : (P ∧ Q) ∨ (P ∧ R)) :
+    P ∧ (Q ∨ R) := by
+  cases h with
+   |inl hh =>
+    constructor
+    exact hh.1
+    left
+    exact hh.2
+   | inr hhh =>
+    constructor
+    exact hhh.1
+    right
+    exact hhh.2
+
+
+-- 4. Use a chain of implications to prove a negation.
+example (P Q R : Prop)
+    (hPQ : P → Q) (hQR : Q → R) (hnR : ¬ R) :
+    ¬ P := by
+  intro h
+  have hh : R :=  hQR (hPQ h)
+  exact hnR hh
+
+-- 5. One branch gives Q; the other leads to a contradiction.
+example (P Q R : Prop)
+    (h : P ∨ Q) (hPR : P → R) (hnR : ¬ R) :
+    Q := by
+   cases h with
+    |inl hh =>
+     have hR: R := hPR hh
+     have hF: False:= hnR hR
+     exact False.elim hF
+    | inr hhh =>
+     exact hhh
+
+-- 1. Compute with a definition.
+-- Hint: rfl can evaluate this definition.
+def addThreePractice (n : Nat) : Nat := n + 3
+
+example : addThreePractice 4 = 7 := by
+  rfl
+
+-- 2. Choose a witness that depends on n.
+-- Hint: use an expression involving n.
+example (n : Nat) : ∃ m : Nat, m = n + 2 := by
+  let m := n + 2
+  use m
+
+-- 3. Apply a statement that holds for every input.
+-- Hint: h takes a natural number as its argument.
+example (Good : Nat → Prop)
+    (h : ∀ n : Nat, Good (n + 1)) :
+    Good 6 := by
+  let m := (5 : Nat)
+  exact h m
+
+-- 4. Transform an existing witness.
+-- Hint: obtain ⟨n, hn⟩ := h, then choose 2 * n.
+example (P Q : Nat → Prop)
+    (h : ∃ n : Nat, P n)
+    (hRule : ∀ n : Nat, P n → Q (2 * n)) :
+    ∃ m : Nat, Q m := by
+  obtain ⟨ n , hn⟩ := h
+  have hh Q (2 * n) := hRule n hn
+  let m := 2 * nff
+   use m
+
+
+-- 5. Prove two functions are equal.
+-- Hint: start with funext n, then rewrite.
+example (f g : Nat → Nat)
+    (hUndo : ∀ n : Nat, g (f n) = n) :
+    (fun n => g (f (n + 1))) = (fun n => n + 1) := by
+  funext n
+  rw [hUndo]
+
+  -- 1. Warm-up: chain implications and keep the starting fact.
+example (P Q R : Prop)
+    (hPQ : P → Q) (hQR : Q → R) :
+    P → (R ∧ P) := by
+  intro h
+  constructor
+  exact hQR (hPQ h)
+  exact h
+
+-- 2. Rewrite inside a hypothesis.
+-- Hint: rw [...] at h changes the hypothesis h.
+example (a b c : Nat)
+    (hab : a = b) (hbc : b = c)
+    (h : a + 4 = 12) :
+    c + 4 = 12 := by
+  rw [← hbc]
+  rw [← hab]
+  exact h
+
+-- 3. Transform both branches of an “or”.
+example (P Q R S : Prop)
+    (h : P ∨ Q) (hPR : P → R) (hQS : Q → S) :
+    R ∨ S := by
+  cases h with
+   | inl hh =>
+    left
+    exact hPR hh
+   | inr hhh =>
+    right
+    exact hQS hhh
+
+
+
+-- 4. A contradiction rules out one branch.
+example (P Q R : Prop)
+    (h : P ∨ Q) (hPR : P → R) (hnR : ¬ R) :
+    Q ∧ ¬ P := by
+  cases h with
+   | inl hh =>
+    constructor
+    have hR : R := hPR hh
+    have hF : False := hnR hR
+    exact False.elim hF
+    have hR : R := hPR hh
+    have hF : False := hnR hR
+    exact False.elim hF
+   | inr hhh =>
+    constructor
+    exact hhh
+    intro hP
+    have hR : R := hPR hP
+    exact hnR hR
+
+
+
+
+
+-- 5. Build an implication whose conclusion is a negation.
+example (P Q : Prop) :
+    (P → Q) → (¬ Q → ¬ P) := by
+  intro h
+  intro hQ
+  intro hP
+  have hQQ : Q := h hP
+  exact hQ hQQ
+
+-- Challenge: split into cases, then combine the results.
+example (P Q R S : Prop)
+    (h : (P ∧ Q) ∨ (R ∧ S))
+    (hQR : Q → R)
+    (hSP : S → P) :
+    P ∧ R := by
+  cases h with
+   |inl hl =>
+    constructor
+    exact hl.1
+    exact hQR hl.2
+   | inr hr =>
+    constructor
+    exact hSP hr.2
+    exact hr.1
+
+
+-- 1. Write a function using an anonymous function.
+def triple : Nat → Nat :=
+  fun n => n * 3
+
+#eval triple 7
+-- Expected: 21
+
+
+-- 2. Take a function as an input and apply it twice.
+def twice (f : Nat → Nat) (n : Nat) : Nat :=
+f (f (n))
+
+#eval twice (fun n => n + 3) 4
+-- Expected: 10
+
+
+-- 3. Swap the entries of a pair.
+-- Use p.1 and p.2 to access its entries.
+def swapPair (p : Nat × Nat) : Nat × Nat :=
+  (p.2, p.1)
+
+#eval swapPair (3, 8)
+-- Expected: (8, 3)
+
+
+-- 4. Handle a value that might be missing.
+-- An Option Nat is either `none` or `some n`.
+def valueOrZero (x : Option Nat) : Nat :=
+  match x with
+  | none => 0
+  | some n => n
+
+#eval valueOrZero none
+-- Expected: 0
+#eval valueOrZero (some 9)
+-- Expected: 9
+
+
+-- 5. Write your first recursive function.
+-- [] is the empty list; x :: xs is a head and a tail.
+def sumList : List Nat → Nat
+  | [] => 0
+  | x :: xs => x + sumList xs
+
+#eval sumList []
+-- Expected: 0
+#eval sumList [2, 4, 6]
+-- Expected: 12
+
+
+-- 1. Apply a function three times.
+def threeTimes (f : Nat → Nat) (n : Nat) : Nat :=
+   f ( f ( f ( n ) ) )
+
+#eval threeTimes (fun n => n + 2) 1
+-- Expected: 7
+
+
+-- 2. Add one to a number if it is present.
+-- Keep a missing value missing.
+def incrementOption : Option Nat → Option Nat
+  | none => none
+  | some n => some (1 + n)
+
+#eval incrementOption none
+-- Expected: none
+#eval incrementOption (some 4)
+-- Expected: some 5
+
+
+-- 3. Return the first element, if there is one.
+-- Hint: use `some` to wrap a number.
+def firstEntry : List Nat → Option Nat
+  | [] => none
+  | x :: _xs => some x
+
+#eval firstEntry []
+-- Expected: none
+#eval firstEntry [7, 3, 9]
+-- Expected: some 7
+
+
+-- 4. Count the elements of a list recursively.
+-- Hint: a nonempty list has one element plus
+-- however many elements are in its remaining list.
+def countEntries : List Nat → Nat
+  | [] => 0
+  | _x :: xs => 1 + countEntries xs
+
+#eval countEntries []
+-- Expected: 0
+#eval countEntries [8, 2, 5]
+-- Expected: 3
+
+
+-- 5. Double every number, returning a new list.
+-- Hint: `a :: rest` builds a list with first element a.
+def doubleEntries : List Nat → List Nat
+  | [] => []
+  | x :: xs => 2 * x :: doubleEntries xs
+
+#eval doubleEntries []
+-- Expected: []
+#eval doubleEntries [2, 5, 3]
+-- Expected: [4, 10, 6]
+
+-- 1. Apply two different functions in order.
+-- First apply f, then apply g to its result.
+----def applyInOrder (f g : Nat → Nat) (n : Nat) : Nat :=
+ ---- g ( f ( n) )
+
+#eval applyInOrder (fun n => n + 3) (fun n => 2 * n) 4
+-- Expected: 14
+
+
+-- 2. Use a fallback when a number is missing.
+def valueOrDefault (fallback : Nat) : Option Nat → Nat
+  | none => fallback
+  | some n => n
+
+#eval valueOrDefault 10 none
+-- Expected: 10
+#eval valueOrDefault 10 (some 3)
+-- Expected: 3
+
+
+-- 3. Remove the first element of a list.
+def dropFirst : List Nat → List Nat
+  | [] => []
+  | _x :: xs => xs
+
+#eval dropFirst []
+-- Expected: []
+#eval dropFirst [4, 7, 9]
+-- Expected: [7, 9]
+
+
+-- 4. Multiply all entries recursively.
+-- Think: which number leaves a product unchanged?
+def productEntries : List Nat → Nat
+  | [] => 1
+  | x :: xs => x * productEntries xs
+
+#eval productEntries []
+-- Expected: 1
+#eval productEntries [2, 3, 4]
+-- Expected: 24
+
+
+-- 5. Apply any given function to every list entry.
+-- Keep f fixed as you recurse through the list.
+def transformEntries (f : Nat → Nat) : List Nat → List Nat
+  | [] => []
+  | x :: xs => f (x) :: transformEntries f xs
+
+#eval transformEntries (fun n => n + 5) [1, 2, 3]
+-- Expected: [6, 7, 8]
+#eval transformEntries (fun n => n * n) [2, 3, 4]
+-- Expected: [4, 9, 16]
+
+-- Exercise 1: Apply f to n, then apply g to the result.
+-- Example: f adds 2, g multiplies by 3, n = 4 → result 18.
+def applyInOrder (f g : Nat → Nat) (n : Nat) : Nat :=
+  g ( f ( n ))
+
+-- Exercise 2: Return n when given some n.
+-- Return fallback when given none.
+-- Examples: valueOrDefault 10 (some 3) → 3
+--           valueOrDefault 10 none → 10
+
+
+-- Uncomment these checks after completing the corresponding definitions.
+
+-- #eval applyInOrder (fun n => n + 2) (fun n => n * 3) 4
+-- #eval valueOrDefault 10 (some 3)
+-- #eval valueOrDefault 10 none
+-- #eval dropFirst [4, 7, 9]
+-- #eval dropFirst []
+-- #eval productEntries [2, 3, 4]
+-- #eval productEntries []
+-- #eval transformEntries (fun n => n + 5) [1, 2, 3]
+-- #eval transformEntries (fun n => n + 5) []
+
+-- Exercise 1: Swap the two entries of a pair.
+-- Example: swapPair (3, 8) → (8, 3)
+-- Hint: p.1 is the first entry; p.2 is the second.
+
+
+-- Exercise 2: Apply f to an optional number.
+-- Keep none as none.
+-- Example: transformOption (fun n => n * 2) (some 4) → some 8
+def transformOption (f : Nat → Nat) : Option Nat → Option Nat
+  | none => none
+  | some n => some (n * 2)
+
+-- Exercise 3: Return the second entry, if it exists.
+-- Examples: secondEntry [5, 8, 2] → some 8
+--           secondEntry [5] → none
+def secondEntry : List Nat → Option Nat
+  | [] => none
+  | _ :: [] => none
+  | _ :: n :: _ => some n
+
+-- Exercise 4: Sum the squares of all entries using recursion.
+-- Examples: sumSquares [2, 3, 4] → 29
+--           sumSquares [] → 0
+def sumSquares : List Nat → Nat
+  | [] => 0
+  | n :: rest => n + sumSquares rest
+
+-- Exercise 5: Keep the numbers and discard missing values.
+-- Examples: collectValues [some 2, none, some 5] → [2, 5]
+--           collectValues [none, none] → []
+-- Hint: each recursive call processes rest.
+def collectValues : List (Option Nat) → List Nat
+  | [] => []
+  | none :: rest => collectValues rest
+  | some n :: rest => n :: collectValues rest
+
+-- Uncomment each check after completing its definition.
+
+-- #eval swapPair (3, 8)
+-- #eval transformOption (fun n => n * 2) (some 4)
+-- #eval transformOption (fun n => n * 2) none
+-- #eval secondEntry [5, 8, 2]
+-- #eval secondEntry [5]
+-- #eval secondEntry []
+-- #eval sumSquares [2, 3, 4]
+-- #eval sumSquares []
+-- #eval collectValues [some 2, none, some 5]
+-- #eval collectValues [none, none]
